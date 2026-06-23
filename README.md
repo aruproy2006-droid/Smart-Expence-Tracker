@@ -1,1 +1,1 @@
-# Smart-Expence-Tracker
+# Smart-Expense-Tracker
