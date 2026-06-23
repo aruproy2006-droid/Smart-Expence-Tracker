@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartSpend — Expense Tracker</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="app-container">
+        <!-- AUTH SECTION -->
+        <section id="auth-section" class="auth-wrapper hidden">
+            <div class="auth-card">
+                <div class="auth-header">
+                    <div class="logo">
+                        <i data-lucide="wallet" class="logo-icon"></i>
+                        <span>SmartSpend</span>
+                    </div>
+                    <p id="auth-subtitle">Track, budget, and master your money in real time.</p>
+                </div>
+                
+                <!-- Login Form -->
+                <form id="login-form" class="auth-form">
+                    <h2 class="auth-title">Welcome Back</h2>
+                    <div class="form-group">
+                        <label for="login-email">Email Address</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="mail" class="input-icon"></i>
+                            <input type="email" id="login-email" placeholder="riya@example.com" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock" class="input-icon"></i>
+                            <input type="password" id="login-password" placeholder="••••••••" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Sign In</button>
+                    <p class="auth-toggle">Don't have an account? <span id="toggle-to-signup">Sign Up</span></p>
+                </form>
+
+                <!-- Signup Form -->
+                <form id="signup-form" class="auth-form hidden">
+                    <h2 class="auth-title">Create Account</h2>
+                    <div class="form-group">
+                        <label for="signup-name">Full Name</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="user" class="input-icon"></i>
+                            <input type="text" id="signup-name" placeholder="Riya Sen" required autocomplete="name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-email">Email Address</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="mail" class="input-icon"></i>
+                            <input type="email" id="signup-email" placeholder="riya@example.com" required autocomplete="email">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="signup-password">Password (min 6 chars)</label>
+                        <div class="input-wrapper">
+                            <i data-lucide="lock" class="input-icon"></i>
+                            <input type="password" id="signup-password" placeholder="••••••••" minlength="6" required autocomplete="new-password">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-block">Create Account</button>
+                    <p class="auth-toggle">Already have an account? <span id="toggle-to-login">Sign In</span></p>
+                </form>
+                
+                <div id="auth-error" class="alert alert-danger hidden"></div>
+            </div>
+        </section>
+
+        <!-- MAIN APPLICATION SECTION -->
+        <section id="app-section" class="app-layout hidden">
+            <!-- Sidebar Navigation -->
+            <aside class="sidebar">
+                <div class="sidebar-header">
+                    <div class="logo">
+                        <i data-lucide="wallet" class="logo-icon"></i>
+                        <span>SmartSpend</span>
+                    </div>
+                </div>
+                
+                <nav class="sidebar-nav">
+                    <button class="nav-item active" data-view="dashboard">
+                        <i data-lucide="layout-dashboard"></i>
+                        <span>Dashboard</span>
+                    </button>
+                    <button class="nav-item" data-view="expenses">
+                        <i data-lucide="receipt"></i>
+                        <span>Expenses</span>
+                    </button>
+                    <button class="nav-item" data-view="budgets">
+                        <i data-lucide="pie-chart"></i>
+                        <span>Budgets</span>
+                    </button>
+                    <button class="nav-item" data-view="recurring">
+                        <i data-lucide="calendar-clock"></i>
+                        <span>Recurring</span>
+                    </button>
+                </nav>
+
+                <div class="sidebar-footer">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="user-avatar-initials">U</div>
+                        <div class="user-info">
+                            <div class="user-name" id="user-display-name">Username</div>
+                            <div class="user-role">Free Member</div>
+                        </div>
+                    </div>
+                    <button id="logout-btn" class="logout-btn" title="Sign Out">
+                        <i data-lucide="log-out"></i>
+                        <span>Sign Out</span>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Main Workspace Area -->
+            <main class="main-content">
+                <!-- Topbar -->
+                <header class="topbar">
+                    <div class="topbar-left">
+                        <h1 id="view-title">Dashboard</h1>
+                        <p id="view-subtitle" class="text-muted">Welcome back to your financial control center.</p>
+                    </div>
+                    <div class="topbar-right">
+                        <!-- Notifications Dropdown Trigger -->
+                        <div class="notification-bell-wrapper">
+                            <button id="notif-bell-btn" class="topbar-action-btn">
+                                <i data-lucide="bell"></i>
+                                <span id="notif-badge" class="badge hidden">0</span>
+                            </button>
+                            <!-- Notifications Popup Panel -->
+                            <div id="notif-dropdown" class="notif-dropdown hidden">
+                                <div class="notif-dropdown-header">
+                                    <h3>Alerts &amp; Notifications</h3>
+                                    <button id="clear-notif-btn" class="btn-text">Clear All</button>
+                                </div>
+                                <div id="notif-list-container" class="notif-list">
+                                    <div class="empty-notifs">No new notifications</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button id="quick-add-btn" class="btn btn-primary">
+                            <i data-lucide="plus"></i>
+                            <span>Quick Add</span>
+                        </button>
+                    </div>
+                </header>
+
+                <!-- Active View Displays -->
+                <div class="view-content">
+                    
+                    <!-- Notification Banner Container (for persistent warnings) -->
+                    <div id="notification-banners" class="notification-banners-area"></div>
+
+                    <!-- DASHBOARD VIEW -->
+                    <div id="view-dashboard" class="app-view">
+                        <!-- Metrics Grid -->
+                        <div class="metrics-grid">
+                            <div class="metric-card card-gradient-blue">
+                                <div class="metric-icon"><i data-lucide="dollar-sign"></i></div>
+                                <div class="metric-info">
+                                    <span class="metric-label">Monthly Spending</span>
+                                    <h3 class="metric-val" id="dash-spent-val">$0.00</h3>
+                                    <span class="metric-sub" id="dash-spent-sub">Logged this month</span>
+                                </div>
+                            </div>
+                            <div class="metric-card card-gradient-green">
+                                <div class="metric-icon"><i data-lucide="target"></i></div>
+                                <div class="metric-info">
+                                    <span class="metric-label">Monthly Budget</span>
+                                    <h3 class="metric-val" id="dash-budget-val">$0.00</h3>
+                                    <span class="metric-sub" id="dash-budget-sub">Across all categories</span>
+                                </div>
+                            </div>
+                            <div class="metric-card card-gradient-purple">
+                                <div class="metric-icon"><i data-lucide="wallet"></i></div>
+                                <div class="metric-info">
+                                    <span class="metric-label">Remaining Balance</span>
+                                    <h3 class="metric-val" id="dash-rem-val">$0.00</h3>
+                                    <span class="metric-sub" id="dash-rem-sub">Safe to spend</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analytical Insights Grid -->
+                        <div class="dashboard-charts-grid">
+                            <!-- Trend Line Chart -->
+                            <div class="card chart-card">
+                                <div class="card-header">
+                                    <h3>Spending Trend</h3>
+                                    <span class="card-sub text-muted">Daily cumulative spending</span>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="trend-chart"></canvas>
+                                </div>
+                            </div>
+
+                            <!-- Category Distribution -->
+                            <div class="card chart-card">
+                                <div class="card-header">
+                                    <h3>Category Allocation</h3>
+                                    <span class="card-sub text-muted">Where your money goes</span>
+                                </div>
+                                <div class="chart-container">
+                                    <canvas id="category-chart"></canvas>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Transactions and Budgets Breakdown -->
+                        <div class="dashboard-split-grid">
+                            <!-- Recent Transactions -->
+                            <div class="card table-card">
+                                <div class="card-header flex-between">
+                                    <div>
+                                        <h3>Recent Expenses</h3>
+                                        <span class="card-sub text-muted">Last 5 logged transactions</span>
+                                    </div>
+                                    <button class="btn-text navigate-to-view" data-target-view="expenses">View All</button>
+                                </div>
+                                <div class="table-wrapper">
+                                    <table class="data-table">
+                                        <thead>
+                                            <tr>
+                                                <th>Merchant / Note</th>
+                                                <th>Category</th>
+                                                <th>Payment Mode</th>
+                                                <th>Date</th>
+                                                <th class="text-right">Amount</th>
+                                                <th class="text-center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="dash-recent-expenses-tbody">
+                                            <tr>
+                                                <td colspan="6" class="text-center text-muted py-4">No recent expenses. Tap Quick Add to start!</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Budget Limits Overview -->
+                            <div class="card budget-summary-card">
+                                <div class="card-header flex-between">
+                                    <div>
+                                        <h3>Category Limits</h3>
+                                        <span class="card-sub text-muted">Current month progress</span>
+                                    </div>
+                                    <button class="btn-text navigate-to-view" data-target-view="budgets">Manage Budgets</button>
+                                </div>
+                                <div class="budget-bars-list" id="dash-budget-bars-container">
+                                    <div class="empty-budgets text-center text-muted py-4">No category budgets set for this month.</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- EXPENSES VIEW -->
+                    <div id="view-expenses" class="app-view hidden">
+                        <div class="card filter-card mb-4">
+                            <div class="filter-grid">
+                                <div class="form-group mb-0">
+                                    <label for="filter-search">Search</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="search" class="input-icon"></i>
+                                        <input type="text" id="filter-search" placeholder="Merchant or note...">
+                                    </div>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="filter-category">Category</label>
+                                    <select id="filter-category">
+                                        <option value="">All Categories</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="filter-payment-mode">Payment Mode</label>
+                                    <select id="filter-payment-mode">
+                                        <option value="">All Modes</option>
+                                        <option value="cash">Cash</option>
+                                        <option value="upi">UPI</option>
+                                        <option value="card">Card</option>
+                                        <option value="wallet">Wallet</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="filter-start-date">From</label>
+                                    <input type="date" id="filter-start-date">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <label for="filter-end-date">To</label>
+                                    <input type="date" id="filter-end-date">
+                                </div>
+                                <div class="filter-actions-wrapper">
+                                    <button id="reset-filters-btn" class="btn btn-secondary btn-block">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="card table-card">
+                            <div class="table-wrapper">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Merchant / Note</th>
+                                            <th>Category</th>
+                                            <th>Payment Mode</th>
+                                            <th>Date</th>
+                                            <th class="text-right">Amount</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="expenses-list-tbody">
+                                        <!-- Will be dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BUDGETS VIEW -->
+                    <div id="view-budgets" class="app-view hidden">
+                        <div class="budgets-header-area flex-between mb-4">
+                            <div class="month-selector">
+                                <button id="budget-prev-month" class="btn-icon"><i data-lucide="chevron-left"></i></button>
+                                <span id="budget-month-label" class="month-title-label">June 2026</span>
+                                <button id="budget-next-month" class="btn-icon"><i data-lucide="chevron-right"></i></button>
+                            </div>
+                            <button id="add-budget-btn" class="btn btn-primary">
+                                <i data-lucide="plus"></i>
+                                <span>Set Budget</span>
+                            </button>
+                        </div>
+
+                        <div class="budgets-detailed-grid" id="budgets-detailed-container">
+                            <!-- Populated dynamically with budget details cards -->
+                        </div>
+                    </div>
+
+                    <!-- RECURRING VIEW -->
+                    <div id="view-recurring" class="app-view hidden">
+                        <div class="recurring-header-area flex-between mb-4">
+                            <div>
+                                <h3 class="section-title">Recurring Rules</h3>
+                                <p class="text-muted">Set up expenses that repeat automatically.</p>
+                            </div>
+                            <button id="add-recurring-btn" class="btn btn-primary">
+                                <i data-lucide="plus"></i>
+                                <span>Add Recurring Rule</span>
+                            </button>
+                        </div>
+
+                        <div class="card table-card">
+                            <div class="table-wrapper">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category</th>
+                                            <th>Amount</th>
+                                            <th>Frequency</th>
+                                            <th>Next Due Date</th>
+                                            <th>Status</th>
+                                            <th class="text-center">Actions</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="recurring-list-tbody">
+                                        <!-- Will be dynamically populated -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </section>
+    </div>
+
+    <!-- MODAL BACKDROP (Shared for all modals) -->
+    <div id="modal-overlay" class="modal-overlay hidden">
+        
+        <!-- QUICK ADD EXPENSE MODAL -->
+        <div id="expense-modal" class="modal-card hidden">
+            <div class="modal-header">
+                <h3 id="expense-modal-title">Log Expense</h3>
+                <button class="close-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="expense-form">
+                <input type="hidden" id="expense-form-id">
+                <div class="form-group">
+                    <label for="expense-amount">Amount ($)</label>
+                    <input type="number" id="expense-amount" step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="expense-note">Description / Note</label>
+                    <input type="text" id="expense-note" placeholder="Coffee, Uber ride, Lunch with team...">
+                </div>
+                <div class="form-group">
+                    <label for="expense-merchant">Merchant Name (Optional)</label>
+                    <input type="text" id="expense-merchant" placeholder="Starbucks, Uber, McDonald's...">
+                </div>
+                <div class="form-group">
+                    <div class="flex-between">
+                        <label for="expense-category">Category</label>
+                        <span id="category-suggestion-badge" class="badge suggestion-badge hidden">Suggested</span>
+                    </div>
+                    <select id="expense-category" required>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-payment">Payment Mode</label>
+                    <select id="expense-payment" required>
+                        <option value="cash">Cash</option>
+                        <option value="upi" selected>UPI</option>
+                        <option value="card">Card</option>
+                        <option value="wallet">Wallet</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="expense-date">Date</label>
+                    <input type="date" id="expense-date" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Expense</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- SET/UPDATE BUDGET MODAL -->
+        <div id="budget-setup-modal" class="modal-card hidden">
+            <div class="modal-header">
+                <h3>Set Category Limit</h3>
+                <button class="close-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="budget-form">
+                <div class="form-group">
+                    <label for="budget-category">Category</label>
+                    <select id="budget-category" required>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="budget-limit">Monthly Limit ($)</label>
+                    <input type="number" id="budget-limit" step="1" min="1" placeholder="500" required>
+                </div>
+                <div class="form-group">
+                    <label for="budget-alert-pct">Alert Threshold (%)</label>
+                    <input type="number" id="budget-alert-pct" min="10" max="100" value="80" required>
+                    <span class="help-text">We'll alert you when spending crosses this percentage.</span>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Budget</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- RECURRING RULE MODAL -->
+        <div id="recurring-setup-modal" class="modal-card hidden">
+            <div class="modal-header">
+                <h3 id="recurring-modal-title">Setup Recurring Expense</h3>
+                <button class="close-modal-btn"><i data-lucide="x"></i></button>
+            </div>
+            <form id="recurring-form">
+                <input type="hidden" id="recurring-form-id">
+                <div class="form-group">
+                    <label for="recurring-amount">Amount ($)</label>
+                    <input type="number" id="recurring-amount" step="0.01" min="0.01" placeholder="0.00" required>
+                </div>
+                <div class="form-group">
+                    <label for="recurring-category">Category</label>
+                    <select id="recurring-category" required>
+                        <!-- Loaded dynamically -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recurring-frequency">Frequency</label>
+                    <select id="recurring-frequency" required>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="recurring-due">Next Due Date</label>
+                    <input type="date" id="recurring-due" required>
+                </div>
+                <div id="recurring-status-container" class="form-group hidden">
+                    <label for="recurring-active">Rule Status</label>
+                    <select id="recurring-active">
+                        <option value="1">Active</option>
+                        <option value="0">Paused</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary close-modal-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Rule</button>
+                </div>
+            </form>
+        </div>
+
+    </div>
+
+    <!-- Main ES Module JS Loading -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
